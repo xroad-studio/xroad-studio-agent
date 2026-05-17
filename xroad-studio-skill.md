@@ -241,6 +241,7 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `quota_queue` | 429 | Too many posts queued waiting to publish. |
 | `rate_limited` | 429 | Over 60 requests/minute. Check `retry_after` in response + `Retry-After` header. |
 | `media_fetch_failed` | 422 | URL not reachable or over 20 MB. |
+| `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request — it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
 | `not_updatable` | 409 | Post is past `scheduled` status — cannot edit. |
 | `not_cancellable` | 409 | Post already published. |
