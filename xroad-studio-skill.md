@@ -25,6 +25,8 @@ Base URL: `https://xroadstudio.com/api/v1`
 
 Store your key in an environment variable — never hardcode it. Suggested: `XROAD_API_KEY`.
 
+Endpoint examples below are relative to the base URL. For example, `GET /brand-kits` means `GET https://xroadstudio.com/api/v1/brand-kits`.
+
 ---
 
 ## Endpoints
@@ -32,39 +34,32 @@ Store your key in an environment variable — never hardcode it. Suggested: `XRO
 ### List Brand Kits
 
 ```
-GET /v1/brand-kits
+GET /brand-kits
 ```
 
-Use this before writing or scheduling branded content. If the user mentions a brand by name, call the endpoint with `?name=` first. If no brand name is given and multiple Brand Kits are returned, ask which brand to use before drafting.
+Use this before writing or scheduling branded content. If the user mentions a brand by name, call the endpoint with URL-encoded `?name=` first. If no brand name is given and multiple Brand Kits are returned, ask which brand to use before drafting.
 
 ```bash
 curl "https://xroadstudio.com/api/v1/brand-kits?name=Garnierusa" \
   -H "Authorization: Bearer $XROAD_API_KEY"
 ```
 
-Response:
+Response shape:
 ```json
 {
   "data": [
     {
       "id": "uuid",
-      "name": "Garnierusa",
+      "name": "Brand name",
       "logo_url": "https://media.xroadstudio.com/...",
-      "colors": {
-        "primary": "#005C43",
-        "accent": "#799B2A",
-        "mood": "#21362C",
-        "intensity": "subtle"
-      },
+      "colors": { "primary": "#005C43", "accent": "#799B2A", "mood": null, "intensity": "subtle" },
       "language": "en",
-      "text_style": "professional, consumers interested in hair and skin care products",
-      "tone_of_voice": null,
-      "audience": null,
-      "offer": null,
-      "banned_words": null,
-      "image_style": "Gotham SSm typography, professional, medium energy",
-      "created_at": "2026-05-18T07:45:53.6025+00:00",
-      "updated_at": "2026-05-18T07:46:26.177102+00:00"
+      "text_style": "professional",
+      "tone_of_voice": "Example brand voice...",
+      "audience": "Who this brand speaks to",
+      "offer": "What this brand sells or promises",
+      "banned_words": "words, phrases, to avoid",
+      "image_style": "visual style guidance"
     }
   ]
 }
@@ -77,7 +72,7 @@ Brand Kit fields are sanitized for external agents. The response does not includ
 ### Get one Brand Kit
 
 ```
-GET /v1/brand-kits/{id}
+GET /brand-kits/{id}
 ```
 
 Use this when the user or a previous API response gives you the Brand Kit UUID.
@@ -92,7 +87,7 @@ curl https://xroadstudio.com/api/v1/brand-kits/$BRAND_ID \
 ### List connected accounts
 
 ```
-GET /v1/accounts
+GET /accounts
 ```
 
 Returns active social accounts the user has connected. Use the `id` field as `social_account_ids` when creating posts.
@@ -151,7 +146,7 @@ Google Drive tip: use `https://drive.google.com/uc?export=download&id=FILE_ID` (
 ### Create a post
 
 ```
-POST /v1/posts
+POST /posts
 ```
 
 ```bash
@@ -171,7 +166,7 @@ curl -X POST https://xroadstudio.com/api/v1/posts \
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `caption` | string | yes | Max 2200 chars |
-| `social_account_ids` | string[] | yes | From GET /v1/accounts |
+| `social_account_ids` | string[] | yes | From GET /accounts |
 | `scheduled_at` | ISO 8601 datetime | no | Omit to publish immediately. Must be 30s+ in future, max 3 months out. |
 | `media_url` | string | no | Permanent public URL. Mutually exclusive with `asset_id`. |
 | `asset_id` | UUID | no | ID of an asset from your Xroad library or generation history. Mutually exclusive with `media_url`. |
@@ -197,7 +192,7 @@ Response (201):
 ### Get a single post
 
 ```
-GET /v1/posts/{id}
+GET /posts/{id}
 ```
 
 ```bash
@@ -212,7 +207,7 @@ curl https://xroadstudio.com/api/v1/posts/$POST_ID \
 ### List posts
 
 ```
-GET /v1/posts
+GET /posts
 ```
 
 Query params: `status` (scheduled/processing/published/failed/cancelled), `from` (ISO datetime), `to` (ISO datetime), `limit` (1-100, default 25), `cursor` (for pagination).
@@ -229,7 +224,7 @@ Response includes `next_cursor` for pagination. Pass it as `cursor=` in the next
 ### Edit a scheduled post
 
 ```
-PATCH /v1/posts/{id}
+PATCH /posts/{id}
 ```
 
 Only works while `status = scheduled`. Editable fields: `caption`, `scheduled_at`, `media_url`, `platform_configurations`.
@@ -249,7 +244,7 @@ curl -X PATCH https://xroadstudio.com/api/v1/posts/$POST_ID \
 ### Cancel a scheduled post
 
 ```
-DELETE /v1/posts/{id}
+DELETE /posts/{id}
 ```
 
 Works on `scheduled` and `processing` posts. Published posts cannot be cancelled here — manage those on the platform directly.
@@ -272,7 +267,7 @@ Use this workflow whenever the user asks for branded, on-brand, brand-consistent
 1. Fetch the Brand Kit:
 
 ```bash
-curl "https://xroadstudio.com/api/v1/brand-kits?name=BRAND_NAME" \
+curl "https://xroadstudio.com/api/v1/brand-kits?name=URL_ENCODED_BRAND_NAME" \
   -H "Authorization: Bearer $XROAD_API_KEY"
 ```
 
