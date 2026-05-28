@@ -4,6 +4,7 @@ Use this file as context in Claude Code or a Claude Project to let Claude schedu
 
 **What you can do with this skill:**
 - List your connected social accounts
+- Read Brand Kit context before drafting content
 - Upload media (files up to 1 GB, or re-host expiring URLs from DALL-E, Canva, Google Drive, etc. — max 20 MB for URL mode)
 - Schedule or immediately publish posts to Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Bluesky, Threads
 - List, edit, and cancel scheduled posts
@@ -27,6 +28,66 @@ Store your key in an environment variable — never hardcode it. Suggested: `XRO
 ---
 
 ## Endpoints
+
+### List Brand Kits
+
+```
+GET /v1/brand-kits
+```
+
+Use this before writing or scheduling branded content. If the user mentions a brand by name, call the endpoint with `?name=` first. If no brand name is given and multiple Brand Kits are returned, ask which brand to use before drafting.
+
+```bash
+curl "https://xroadstudio.com/api/v1/brand-kits?name=Garnierusa" \
+  -H "Authorization: Bearer $XROAD_API_KEY"
+```
+
+Response:
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Garnierusa",
+      "logo_url": "https://media.xroadstudio.com/...",
+      "colors": {
+        "primary": "#005C43",
+        "accent": "#799B2A",
+        "mood": "#21362C",
+        "intensity": "subtle"
+      },
+      "language": "en",
+      "text_style": "professional, consumers interested in hair and skin care products",
+      "tone_of_voice": null,
+      "audience": null,
+      "offer": null,
+      "banned_words": null,
+      "image_style": "Gotham SSm typography, professional, medium energy",
+      "created_at": "2026-05-18T07:45:53.6025+00:00",
+      "updated_at": "2026-05-18T07:46:26.177102+00:00"
+    }
+  ]
+}
+```
+
+Brand Kit fields are sanitized for external agents. The response does not include `user_id`, storage keys, disabled color values, or internal database-only fields.
+
+---
+
+### Get one Brand Kit
+
+```
+GET /v1/brand-kits/{id}
+```
+
+Use this when the user or a previous API response gives you the Brand Kit UUID.
+
+```bash
+curl https://xroadstudio.com/api/v1/brand-kits/$BRAND_ID \
+  -H "Authorization: Bearer $XROAD_API_KEY"
+```
+
+---
 
 ### List connected accounts
 
@@ -203,6 +264,33 @@ Response: `{ "data": { "id": "...", "status": "cancelled" } }`
 ---
 
 ## Common workflows
+
+### Branded autoposting workflow
+
+Use this workflow whenever the user asks for branded, on-brand, brand-consistent, client-specific, or named-brand content.
+
+1. Fetch the Brand Kit:
+
+```bash
+curl "https://xroadstudio.com/api/v1/brand-kits?name=BRAND_NAME" \
+  -H "Authorization: Bearer $XROAD_API_KEY"
+```
+
+2. Draft using the Brand Kit:
+
+- Use `language` for output language.
+- Use `text_style` and `tone_of_voice` for caption tone and structure.
+- Use `audience` to decide what pain points and benefits to emphasize.
+- Use `offer` to keep the call to action aligned with the business.
+- Avoid exact words or phrases listed in `banned_words`.
+- Use `colors` and `image_style` when generating or selecting visuals.
+- Use `logo_url` only if the user asks to include the logo or brand mark.
+
+3. Continue with media upload, social account lookup, and post creation.
+
+Do not invent Brand Kit fields that are `null`. If a field is missing, use the user's brief and the available fields.
+
+---
 
 ### Safe media posting (ALWAYS use this when posting with media)
 

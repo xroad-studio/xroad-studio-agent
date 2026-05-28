@@ -6,6 +6,7 @@ Works with **Claude Code, Cursor, Windsurf, ChatGPT, Copilot, n8n AI nodes, or a
 
 Once added, your AI knows how to:
 - List your connected social accounts (Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Bluesky, Threads)
+- Fetch your Brand Kit context before drafting on-brand content
 - Upload media or re-host expiring image URLs (DALL-E, Canva, Google Drive, Airtable)
 - Schedule or immediately publish posts
 - List, edit, and cancel scheduled posts
@@ -60,6 +61,8 @@ export XROAD_API_KEY=xrd_live_...
 Once the skill is active, tell your AI:
 
 > "Post this image to my Instagram: [url]. Caption: Launching today."
+
+> "Use my Garnierusa Brand Kit and schedule an on-brand LinkedIn post for tomorrow."
 
 > "Schedule a TikTok post for Friday at 10am with this video: [url]."
 
