@@ -1,15 +1,33 @@
-# xroad-studio-skill.md — Xroad Studio API
+# xroad-studio-skill.md - Xroad Studio Agent Skills
 
-Use this file as context in Claude Code or a Claude Project to let Claude schedule and publish social media posts through the Xroad Studio API.
+Use this file as context in an AI agent to let the agent schedule and publish social media posts through the Xroad Studio API.
+This file currently covers the posting module of the broader Xroad Studio agent-skill bundle, with room for analytics, image creation, and future workflows later.
+
+Last verified against the public Xroad Studio API: June 3, 2026
+
+## Agent role
+
+You are an agent workflow assistant for Xroad Studio. Your current job is to help the user draft, upload, schedule, publish, inspect, edit, and cancel social media posts using the Xroad Studio API.
+
+Before creating or changing a post, make sure you know:
+
+- Which connected social account or platform to use.
+- Whether the post should publish immediately or be scheduled.
+- The final caption text.
+- The final media source, if media is required.
+- The Brand Kit to use, if the user asks for branded or client-specific content.
+
+If any of those details are ambiguous, ask a concise clarification before posting. Treat publishing as a user-visible action and avoid posting to a guessed account.
 
 **What you can do with this skill:**
 - List your connected social accounts
 - Read Brand Kit context before drafting content
-- Upload media (files up to 1 GB, or re-host expiring URLs from DALL-E, Canva, Google Drive, etc. — max 20 MB for URL mode)
-- Schedule or immediately publish posts to Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Bluesky, Threads
+- Upload media (JPG, PNG, WebP, MP4, MOV files up to 250 MB, or re-host public/temporary URLs up to 20 MB)
+- Schedule or immediately publish posts to Instagram, TikTok, TikTok Business, YouTube, Facebook, X, LinkedIn, Pinterest, Threads, and Bluesky
 - List, edit, and cancel scheduled posts
+- Generate OAuth connection URLs when the user needs to connect a new social account
 
-**Requirements:** A paid Xroad Studio account (Starter, Creator, or Business). Generate your API key at https://xroadstudio.com/settings under API Keys.
+**Requirements:** Xroad Studio API access, currently described in the public OpenAPI schema for Creator and Business plans. Generate your API key at https://xroadstudio.com/settings under API Keys. The user must connect social accounts in Xroad Studio before you can post to them. Brand Kit context is available only after the user creates Brand Kits in Xroad Studio.
 
 ---
 
@@ -23,9 +41,16 @@ Authorization: Bearer xrd_live_<your-key>
 
 Base URL: `https://xroadstudio.com/api/v1`
 
-Store your key in an environment variable — never hardcode it. Suggested: `XROAD_API_KEY`.
+Store your key in an environment variable - never hardcode it. Suggested: `XROAD_API_KEY`.
 
 Endpoint examples below are relative to the base URL. For example, `GET /brand-kits` means `GET https://xroadstudio.com/api/v1/brand-kits`.
+
+Security rules:
+
+- Never print, commit, or store the user's full API key.
+- If the key is missing, ask the user to set `XROAD_API_KEY` or configure the secret in their agent/runtime.
+- If an API call returns `401 invalid_key`, ask the user to create or rotate the key in Xroad Studio settings.
+- Do not publish, reschedule, or cancel posts when the intended account or post ID is unclear.
 
 ---
 
@@ -40,7 +65,7 @@ GET /brand-kits
 Use this before writing or scheduling branded content. If the user mentions a brand by name, call the endpoint with URL-encoded `?name=` first. If no brand name is given and multiple Brand Kits are returned, ask which brand to use before drafting.
 
 ```bash
-curl "https://xroadstudio.com/api/v1/brand-kits?name=Garnierusa" \
+curl "https://xroadstudio.com/api/v1/brand-kits?name=Example%20Studio" \
   -H "Authorization: Bearer $XROAD_API_KEY"
 ```
 
@@ -65,7 +90,7 @@ Response shape:
 }
 ```
 
-Brand Kit fields are sanitized for external agents. The response does not include `user_id`, storage keys, disabled color values, or internal database-only fields.
+Brand Kit fields are sanitized for external agents. The response does not include `user_id`, storage keys, OAuth tokens, provider credentials, disabled color values, or internal database-only fields. Do not ask the user for private provider credentials; Xroad Studio handles connected-account authorization behind the API.
 
 ---
 
@@ -107,13 +132,56 @@ Response:
 }
 ```
 
+Use this before every create-post request. If multiple accounts match the user's request, ask which one to use. If no account is connected for the requested platform, tell the user to connect it in Xroad Studio or generate an OAuth URL with `POST /accounts/connect`.
+
+Supported platform values:
+
+- `instagram`
+- `tiktok`
+- `tiktok_business`
+- `youtube`
+- `facebook`
+- `x`
+- `linkedin`
+- `pinterest`
+- `threads`
+- `bluesky`
+
+---
+
+### Generate a social account connection URL
+
+```
+POST /accounts/connect
+```
+
+Use this only when the user needs to connect a new social account. The response returns an OAuth URL that the user must open in a browser. API-only flows cannot complete the OAuth handshake for the user.
+
+```bash
+curl -X POST https://xroadstudio.com/api/v1/accounts/connect \
+  -H "Authorization: Bearer $XROAD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "platform": "instagram" }'
+```
+
+Response:
+```json
+{
+  "data": {
+    "auth_url": "https://...",
+    "platform": "instagram",
+    "expires_in": 600
+  }
+}
+```
+
 ---
 
 ### Upload media
 
-Two modes — use whichever fits:
+Two modes - use whichever fits:
 
-**Option A: Upload a file (up to 1 GB)**
+**Option A: Upload a file (up to 250 MB)**
 
 ```bash
 curl -X POST https://xroadstudio.com/api/v1/media \
@@ -121,7 +189,7 @@ curl -X POST https://xroadstudio.com/api/v1/media \
   -F "file=@/path/to/photo.jpg"
 ```
 
-**Option B: Re-host an expiring URL (DALL-E, Gemini, Canva, Google Drive, Airtable — max 20 MB)**
+**Option B: Re-host an expiring URL (DALL-E, Gemini, Canva, Google Drive, Airtable - max 20 MB)**
 
 ```bash
 curl -X POST https://xroadstudio.com/api/v1/media \
@@ -132,7 +200,7 @@ curl -X POST https://xroadstudio.com/api/v1/media \
 
 Response (both modes):
 ```json
-{ "data": { "url": "https://media.xroadstudio.com/..." } }
+{ "data": { "url": "https://media.xroadstudio.com/...", "skip_processing": false } }
 ```
 
 The returned URL is permanent. Use it as `media_url` in the post creation call below.
@@ -172,6 +240,24 @@ curl -X POST https://xroadstudio.com/api/v1/posts \
 | `asset_id` | UUID | no | ID of an asset from your Xroad library or generation history. Mutually exclusive with `media_url`. |
 | `platform_configurations` | object | no | Per-platform options (TikTok privacy, YouTube title, etc.). See OpenAPI schema. |
 
+Common `platform_configurations` examples:
+
+```json
+{
+  "instagram": { "placement": "feed" },
+  "tiktok": {
+    "privacy_level": "PUBLIC_TO_EVERYONE",
+    "disable_duet": false,
+    "disable_comment": false,
+    "disable_stitch": false
+  },
+  "youtube": {
+    "title": "Video title",
+    "privacy_status": "public"
+  }
+}
+```
+
 Response (201):
 ```json
 {
@@ -200,7 +286,7 @@ curl https://xroadstudio.com/api/v1/posts/$POST_ID \
   -H "Authorization: Bearer $XROAD_API_KEY"
 ```
 
-**Post status lifecycle:** `scheduled` → `processing` → `published` (or `failed` / `cancelled`)
+**Post status lifecycle:** `scheduled` -> `processing` -> `published` (or `failed` / `cancelled`)
 
 ---
 
@@ -247,7 +333,7 @@ curl -X PATCH https://xroadstudio.com/api/v1/posts/$POST_ID \
 DELETE /posts/{id}
 ```
 
-Works on `scheduled` and `processing` posts. Published posts cannot be cancelled here — manage those on the platform directly.
+Works on `scheduled` and `processing` posts. Published posts cannot be cancelled here - manage those on the platform directly.
 
 ```bash
 curl -X DELETE https://xroadstudio.com/api/v1/posts/$POST_ID \
@@ -260,7 +346,24 @@ Response: `{ "data": { "id": "...", "status": "cancelled" } }`
 
 ## Common workflows
 
-### Branded autoposting workflow
+### Preflight checklist before creating a post
+
+Always follow this order:
+
+1. Confirm the API key is configured.
+2. If the user asks for branded content, fetch the Brand Kit first.
+3. List connected accounts with `GET /accounts`.
+4. Match the user's requested destination to an account ID.
+5. If media is included, upload or re-host it with `POST /media`.
+6. Poll the media URL until it returns HTTP 200.
+7. Create the post with `POST /posts`.
+8. Report the post ID, status, destination account(s), and scheduled time.
+
+If the requested account is not connected, do not create the post. Help the user connect the account first.
+
+---
+
+### Brand-aware posting workflow
 
 Use this workflow whenever the user asks for branded, on-brand, brand-consistent, client-specific, or named-brand content.
 
@@ -285,11 +388,13 @@ curl "https://xroadstudio.com/api/v1/brand-kits?name=URL_ENCODED_BRAND_NAME" \
 
 Do not invent Brand Kit fields that are `null`. If a field is missing, use the user's brief and the available fields.
 
+If the Brand Kit lookup returns no matches, ask the user to create the Brand Kit in Xroad Studio or provide the brand guidance directly in the prompt. Do not invent brand voice, banned words, or offer details and present them as Brand Kit data.
+
 ---
 
 ### Safe media posting (ALWAYS use this when posting with media)
 
-Never post immediately after upload — the CDN needs time to propagate. Images take ~5s, videos can take 10-15s. Always verify the URL returns 200 before creating the post.
+Never post immediately after upload - the CDN needs time to propagate. Images take ~5s, videos can take 10-15s. Always verify the URL returns 200 before creating the post.
 
 ```bash
 # 1. Upload media and get permanent URL
@@ -313,7 +418,7 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
   fi
   ATTEMPT=$((ATTEMPT + 1))
   if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    echo "Media never became available after ${MAX_ATTEMPTS}x5s — aborting" && exit 1
+    echo "Media never became available after ${MAX_ATTEMPTS}x5s - aborting" && exit 1
   fi
   sleep 5
 done
@@ -352,7 +457,7 @@ MEDIA_URL=$(curl -s -X POST https://xroadstudio.com/api/v1/media \
 # 2. Verify media is live (poll every 5s, max 15 tries)
 for i in $(seq 1 15); do
   [ "$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL")" = "200" ] && break
-  [ $i -eq 15 ] && echo "Media not available — aborting" && exit 1
+  [ $i -eq 15 ] && echo "Media not available - aborting" && exit 1
   sleep 5
 done
 
@@ -387,20 +492,20 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `quota_queue` | 429 | Too many posts queued waiting to publish. |
 | `rate_limited` | 429 | Over 60 requests/minute. Check `retry_after` in response + `Retry-After` header. |
 | `media_fetch_failed` | 422 | URL not reachable or over 20 MB. |
-| `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request — it resolves automatically in most cases. |
+| `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request - it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
-| `not_updatable` | 409 | Post is past `scheduled` status — cannot edit. |
+| `not_updatable` | 409 | Post is past `scheduled` status - cannot edit. |
 | `not_cancellable` | 409 | Post already published. |
 | `duplicate` | 409 | Identical post submitted within 30 seconds. |
-| `invalid_request` | 400 | Validation error — check `message` for details. |
+| `invalid_request` | 400 | Validation error - check `message` for details. |
 
 ---
 
 ## Limits
 
 - Rate limit: 60 requests / 60 seconds per key
-- Monthly post quota: Starter 30/mo, Creator 120/mo, Business 500/mo (shared with dashboard)
-- Media file upload: 1 GB max
+- Monthly post quota depends on the user's Xroad Studio plan and is shared with the dashboard
+- Media file upload: 250 MB max
 - Media URL re-host: 20 MB max
 - `scheduled_at`: minimum 30 seconds in future, maximum 3 months out
 - 1 active API key per account (revoke existing key to rotate)
