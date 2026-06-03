@@ -1,4 +1,4 @@
-# xroad-studio-agent-skills.md - Xroad Studio Agent Skills
+# Agent skills
 
 Use this file as context in an AI agent to let the agent schedule and publish social media posts through the Xroad Studio API.
 

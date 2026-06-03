@@ -1,4 +1,4 @@
-# Xroad Studio Agent Skills
+# Agent skills
 
 Last verified against the public Xroad Studio API: June 3, 2026
 
@@ -95,8 +95,8 @@ curl https://xroadstudio.com/api/v1/accounts \
 
 ```bash
 mkdir -p .claude/skills
-  curl -o .claude/skills/xroad-studio-agent-skills.md \
-  https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
+  curl -o .claude/skills/agent-skills.md \
+  https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/agent-skills.md
 ```
 
 ### Cursor Or Windsurf
@@ -104,7 +104,7 @@ mkdir -p .claude/skills
 Download the skill into your project root so the agent can read it as context:
 
 ```bash
-curl -O https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
+curl -O https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/agent-skills.md
 ```
 
 ### ChatGPT Custom GPT
@@ -119,14 +119,14 @@ Set authentication to Bearer Token and provide your Xroad Studio API key.
 
 ### Claude Project Or ChatGPT Project
 
-Open [xroad-studio-agent-skills.md](./xroad-studio-agent-skills.md), copy the full contents, and paste it into the project's instructions or knowledge/context area.
+Open [agent-skills.md](./agent-skills.md), copy the full contents, and paste it into the project's instructions or knowledge/context area.
 
 ### n8n Or Other Agent Runtimes
 
 Fetch the raw skill file and inject it as system or workflow context:
 
 ```text
-https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
+https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/agent-skills.md
 ```
 
 Use an HTTP Request node with:
