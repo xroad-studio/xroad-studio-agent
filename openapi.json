@@ -1,0 +1,1132 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Xroad Studio API",
+    "version": "1.0.0",
+    "description": "Post to your connected social-media accounts from agents, n8n, or Zapier. Creator and Business plans only. Quota and accounts are shared with the Xroad Studio dashboard.",
+    "contact": {
+      "email": "support@xroadstudio.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://xroadstudio.com/api/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Media",
+      "description": "Upload images and videos for use in posts."
+    },
+    {
+      "name": "Posts",
+      "description": "Create, list, retrieve and cancel social-media posts."
+    },
+    {
+      "name": "Accounts",
+      "description": "List and connect social-media accounts."
+    },
+    {
+      "name": "Brand Kits",
+      "description": "Read sanitized Brand Kit context for on-brand agent workflows."
+    }
+  ],
+  "paths": {
+    "/brand-kits": {
+      "get": {
+        "tags": [
+          "Brand Kits"
+        ],
+        "summary": "List Brand Kits",
+        "description": "List the authenticated user's Brand Kits. Use this before drafting branded content. Optional `name` performs case-insensitive brand-name lookup.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional brand name lookup, e.g. `Garnierusa` or `Xroad Studio`."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Brand Kits found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandKitListEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/QuotaOrRateLimit"
+          },
+          "500": {
+            "$ref": "#/components/responses/DbError"
+          }
+        },
+        "operationId": "listBrandKits"
+      }
+    },
+    "/brand-kits/{id}": {
+      "get": {
+        "tags": [
+          "Brand Kits"
+        ],
+        "summary": "Retrieve a Brand Kit",
+        "description": "Retrieve one authenticated user's Brand Kit by UUID. Returns `404 not_found` if the Brand Kit does not exist or belongs to another user.",
+        "responses": {
+          "200": {
+            "description": "Brand Kit found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandKitEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/QuotaOrRateLimit"
+          },
+          "500": {
+            "$ref": "#/components/responses/DbError"
+          }
+        },
+        "operationId": "getBrandKit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/media": {
+      "post": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Upload media",
+        "description": "Upload a file or re-host a public URL. Returns a permanent CDN URL you can pass as `media_url` in POST /posts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image or video file. Allowed: JPG, PNG, WebP, MP4, MOV. Max 250 MB."
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Public URL to fetch and re-host (max 20 MB)."
+                  }
+                }
+              },
+              "examples": {
+                "chatgpt": {
+                  "summary": "Re-host a ChatGPT/DALL-E image URL",
+                  "value": {
+                    "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Media uploaded. Use `url` as `media_url` in POST /posts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Permanent CDN URL."
+                        },
+                        "skip_processing": {
+                          "type": "boolean",
+                          "description": "true for large videos when transcoding will be skipped. Pass this as a hint if needed."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "description": "File exceeds 250 MB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "File type not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MediaUnprocessable"
+          },
+          "429": {
+            "$ref": "#/components/responses/QuotaOrRateLimit"
+          },
+          "502": {
+            "description": "Media upload to CDN failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "uploadMedia"
+      }
+    },
+    "/posts": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Create a post",
+        "description": "Schedule a social-media post (or publish immediately by omitting `scheduled_at`). Media can be supplied as a public URL or an existing Xroad asset ID.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostRequest"
+              },
+              "examples": {
+                "scheduled": {
+                  "summary": "Scheduled post with media URL",
+                  "value": {
+                    "caption": "Launching our new product today! 🚀",
+                    "scheduled_at": "2026-04-25T12:00:00Z",
+                    "social_account_ids": [
+                      "acc_abc123"
+                    ],
+                    "media_url": "https://example.com/poster.jpg"
+                  }
+                },
+                "immediate": {
+                  "summary": "Immediate post from Xroad library asset",
+                  "value": {
+                    "caption": "Fresh behind-the-scenes.",
+                    "social_account_ids": [
+                      "acc_abc123",
+                      "acc_xyz789"
+                    ],
+                    "asset_id": "7f1b2c40-0d6e-4e02-8ef1-0c0f1a4c6b22"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Post created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/MediaUnprocessable"
+          },
+          "429": {
+            "$ref": "#/components/responses/QuotaOrRateLimit"
+          }
+        },
+        "operationId": "createPost"
+      },
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "List posts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "scheduled",
+                "processing",
+                "published",
+                "failed",
+                "cancelled"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque cursor returned as `next_cursor` in a prior response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of posts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Post"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/QuotaOrRateLimit"
+          }
+        },
+        "operationId": "listPosts"
+      }
+    },
+    "/posts/{id}": {
+      "patch": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Update a scheduled post",
+        "description": "Edit the caption, scheduled time, media, or platform configurations of a post in `scheduled` status. Returns `not_updatable` (409) if the post has already started processing.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "caption": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2200
+                  },
+                  "scheduled_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "ISO 8601 timestamp at least 30 seconds in the future."
+                  },
+                  "media_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Replacement media URL. Must be publicly accessible."
+                  },
+                  "platform_configurations": {
+                    "type": "object",
+                    "description": "Per-platform overrides. Same structure as POST /posts."
+                  },
+                  "skip_processing": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "examples": {
+                "reschedule": {
+                  "summary": "Move post 2 hours later and update caption",
+                  "value": {
+                    "caption": "Updated caption!",
+                    "scheduled_at": "2026-05-10T14:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Post is not in schedulable status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/MediaUnprocessable"
+          },
+          "502": {
+            "description": "Provider update failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "updatePost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Retrieve a post",
+        "responses": {
+          "200": {
+            "description": "Post found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "getPost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Cancel a scheduled post",
+        "description": "Cancels a post in `scheduled` or `processing` status. Posts that have already been published cannot be cancelled.",
+        "responses": {
+          "200": {
+            "description": "Post cancelled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "cancelled"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/NotCancellable"
+          }
+        },
+        "operationId": "deletePost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/accounts": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "List connected social accounts",
+        "responses": {
+          "200": {
+            "description": "Active social accounts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SocialAccount"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "operationId": "get_accounts"
+      }
+    },
+    "/accounts/connect": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Get an OAuth URL to connect a new social account",
+        "description": "Returns an OAuth URL that the end-user must open in a browser to complete the handshake. API-only flows cannot finish OAuth.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "platform"
+                ],
+                "properties": {
+                  "platform": {
+                    "$ref": "#/components/schemas/Platform"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OAuth URL generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "auth_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "platform": {
+                          "$ref": "#/components/schemas/Platform"
+                        },
+                        "expires_in": {
+                          "type": "integer",
+                          "description": "Seconds until the URL expires.",
+                          "example": 600
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "502": {
+            "description": "Upstream provider error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post_accounts_connect"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "xrd_live_...",
+        "description": "Pass your API key as `Authorization: Bearer xrd_live_...`. Generate it in Settings → API Keys."
+      }
+    },
+    "schemas": {
+      "Platform": {
+        "type": "string",
+        "enum": [
+          "instagram",
+          "tiktok",
+          "tiktok_business",
+          "youtube",
+          "facebook",
+          "x",
+          "linkedin",
+          "pinterest",
+          "threads",
+          "bluesky"
+        ]
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "processing",
+              "published",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "media_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "social_account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Platform"
+            }
+          },
+          "error_message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PostEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Post"
+          }
+        }
+      },
+      "SocialAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Account ID. Pass this value in `social_account_ids` when creating a post."
+          },
+          "platform": {
+            "$ref": "#/components/schemas/Platform"
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile_photo_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disconnected"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BrandKitColors": {
+        "type": "object",
+        "properties": {
+          "primary": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Enabled primary color hex, or null when disabled/missing."
+          },
+          "accent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Enabled accent color hex, or null when disabled/missing."
+          },
+          "mood": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Enabled mood color hex, or null when disabled/missing."
+          },
+          "intensity": {
+            "type": "string",
+            "enum": [
+              "subtle",
+              "strong"
+            ],
+            "default": "subtle"
+          }
+        }
+      },
+      "BrandKit": {
+        "type": "object",
+        "description": "Sanitized Brand Kit context for external agents. No user_id, storage keys, disabled color values, or internal-only fields.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "logo_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "colors": {
+            "$ref": "#/components/schemas/BrandKitColors"
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Preferred output language, e.g. `en` or `no`."
+          },
+          "text_style": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tone_of_voice": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "audience": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "banned_words": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Exact words or phrases agents should avoid."
+          },
+          "image_style": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BrandKitEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BrandKit"
+          }
+        }
+      },
+      "BrandKitListEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrandKit"
+            }
+          }
+        }
+      },
+      "CreatePostRequest": {
+        "type": "object",
+        "required": [
+          "caption",
+          "social_account_ids"
+        ],
+        "properties": {
+          "caption": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2200
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp at least 30 seconds in the future (max 3 months). Omit to publish immediately."
+          },
+          "social_account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "media_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public URL to a media file (≤20 MB). Mutually exclusive with `asset_id`."
+          },
+          "asset_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of an asset in your Xroad library or history. Mutually exclusive with `media_url`."
+          },
+          "platform_configurations": {
+            "type": "object",
+            "description": "Optional per-platform overrides keyed by platform name (e.g. `tiktok`, `youtube`, `instagram`). Common keys per platform: TikTok `{ privacy_level, disable_duet, disable_comment, disable_stitch }`, YouTube `{ title, privacy_status }`, Instagram `{ placement: 'feed' | 'reels' | 'stories' }`. Unknown keys are ignored."
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Stable machine-readable identifier.",
+                "example": "quota_monthly"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable explanation."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request body or query.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Plan does not include API access.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotCancellable": {
+        "description": "Post can no longer be cancelled.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "MediaUnprocessable": {
+        "description": "Media URL could not be fetched or was too large.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "DbError": {
+        "description": "Database error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "QuotaOrRateLimit": {
+        "description": "Monthly quota, queue, or per-key rate limit exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Seconds until a retry is permitted."
+          }
+        }
+      }
+    }
+  }
+}

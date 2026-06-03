@@ -472,7 +472,7 @@ curl -X POST https://xroadstudio.com/api/v1/posts \
 
 ### Schedule a week of posts from an n8n loop
 
-In n8n: use an HTTP Request node for each step. Set `Authentication: Header Auth`, key `Authorization`, value `Bearer {{$credentials.xroadApiKey}}`. Import `/openapi.json` at `https://xroadstudio.com/openapi.json` for schema auto-complete.
+In n8n: use an HTTP Request node for each step. Set `Authentication: Header Auth`, key `Authorization`, value `Bearer {{$credentials.xroadApiKey}}`. Use the bundled `./openapi.json` for schema auto-complete, and refresh it from `https://xroadstudio.com/openapi.json` when needed.
 
 For media verification in n8n: add a Wait node (5s) after the media upload, then an HTTP Request node doing a GET on the media URL. Use an IF node to check status code = 200 before proceeding to post creation. Loop back to the Wait node if not yet 200 (up to 15 iterations).
 
@@ -513,4 +513,4 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 
 ## OpenAPI schema
 
-Full schema (Postman, Insomnia, GPT Actions): `https://xroadstudio.com/openapi.json`
+Full schema (Postman, Insomnia, GPT Actions): bundled snapshot `./openapi.json` and live schema `https://xroadstudio.com/openapi.json`
