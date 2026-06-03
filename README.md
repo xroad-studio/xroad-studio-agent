@@ -2,7 +2,7 @@
 
 Last verified against the public Xroad Studio API: June 3, 2026
 
-This repository contains a portable AI-agent skill bundle for publishing and scheduling social media posts through the [Xroad Studio](https://xroadstudio.com) API, with room to add analytics, image creation, and other agent workflows later.
+This repository contains a portable AI-agent skill for publishing and scheduling social media posts through the [Xroad Studio](https://xroadstudio.com) API.
 
 Use it when you want an AI assistant to act like a social media operations agent: check which accounts are connected, read sanitized Brand Kit context, draft on-brand captions, upload or re-host media, then publish or schedule posts through Xroad Studio.
 
@@ -96,7 +96,7 @@ curl https://xroadstudio.com/api/v1/accounts \
 ```bash
 mkdir -p .claude/skills
   curl -o .claude/skills/xroad-studio-agent-skills.md \
-  https://raw.githubusercontent.com/xroad-studio/Skill_autoposting/main/xroad-studio-agent-skills.md
+  https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
 ```
 
 ### Cursor Or Windsurf
@@ -104,7 +104,7 @@ mkdir -p .claude/skills
 Download the skill into your project root so the agent can read it as context:
 
 ```bash
-curl -O https://raw.githubusercontent.com/xroad-studio/Skill_autoposting/main/xroad-studio-agent-skills.md
+curl -O https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
 ```
 
 ### ChatGPT Custom GPT
@@ -126,7 +126,7 @@ Open [xroad-studio-agent-skills.md](./xroad-studio-agent-skills.md), copy the fu
 Fetch the raw skill file and inject it as system or workflow context:
 
 ```text
-https://raw.githubusercontent.com/xroad-studio/Skill_autoposting/main/xroad-studio-agent-skills.md
+https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/xroad-studio-agent-skills.md
 ```
 
 Use an HTTP Request node with:

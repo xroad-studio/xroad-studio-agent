@@ -1,7 +1,6 @@
 # xroad-studio-agent-skills.md - Xroad Studio Agent Skills
 
 Use this file as context in an AI agent to let the agent schedule and publish social media posts through the Xroad Studio API.
-This file currently covers the posting module of the broader Xroad Studio agent-skill bundle, with room for analytics, image creation, and future workflows later.
 
 Last verified against the public Xroad Studio API: June 3, 2026
 
