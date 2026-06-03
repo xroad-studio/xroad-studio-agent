@@ -181,20 +181,7 @@ Primary endpoints:
 Full API reference:
 
 - [API docs](https://xroadstudio.com/docs/api)
-- [Bundled OpenAPI snapshot](./openapi.json)
-- [Live OpenAPI schema](https://xroadstudio.com/openapi.json)
-
-## OpenAPI Sync
-
-This repo includes a committed `openapi.json` snapshot so the skill works even when the live schema is unavailable.
-
-Refresh it with:
-
-```bash
-node scripts/sync-openapi.mjs
-```
-
-The sync script fetches the live schema, repairs the known trailing-comma issue if present, validates the JSON, and writes the bundled snapshot back to the repo.
+- [OpenAPI schema](https://xroadstudio.com/openapi.json)
 
 ## Limits And Operational Notes
 
