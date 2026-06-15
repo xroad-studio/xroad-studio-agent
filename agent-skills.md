@@ -19,6 +19,7 @@ Before creating or changing a post, make sure you know:
 If any of those details are ambiguous, ask a concise clarification before posting. Treat publishing as a user-visible action and avoid posting to a guessed account.
 
 **What you can do with this skill:**
+- Generate one AI image at a time with Xroad Studio, then poll until the image URL is ready
 - List your connected social accounts
 - Read Brand Kit context before drafting content
 - Upload media (JPG, PNG, WebP, MP4, MOV files up to 250 MB, or re-host public/temporary URLs up to 20 MB)
@@ -207,6 +208,76 @@ The returned URL is permanent. Use it as `media_url` in the post creation call b
 Google Drive tip: use `https://drive.google.com/uc?export=download&id=FILE_ID` (file must be shared publicly).
 
 > **Important:** After upload, always verify the media URL is reachable before creating the post (see Safe Media Posting workflow below). Videos in particular can take 10-15s to finish processing on the CDN.
+
+---
+
+### Generate an image
+
+```
+POST /images
+```
+
+Generates one GPT Image 2 image. This endpoint is polling-only: start the job, then call `GET /images/{job_id}` until `status` is `completed`.
+
+```bash
+curl -X POST https://xroadstudio.com/api/v1/images \
+  -H "Authorization: Bearer $XROAD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A clean studio product photo on a matte black surface",
+    "aspect_ratio": "1:1"
+  }'
+```
+
+Body fields:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `prompt` | string | yes | Max 4000 chars |
+| `aspect_ratio` | string | no | `1:1`, `16:9`, `9:16`, `4:3`, or `3:4`. Defaults to `1:1`. |
+
+Only one image generation can be active at a time. Wait until the current image returns an `image_url` before starting the next one.
+
+Response:
+
+```json
+{
+  "data": {
+    "job_id": "uuid",
+    "asset_id": "uuid",
+    "status": "processing",
+    "poll_url": "/api/v1/images/uuid"
+  }
+}
+```
+
+### Get generated image status
+
+```
+GET /images/{job_id}
+```
+
+```bash
+curl https://xroadstudio.com/api/v1/images/$JOB_ID \
+  -H "Authorization: Bearer $XROAD_API_KEY"
+```
+
+When complete, use `image_url` directly in `POST /posts` as `media_url`.
+
+```json
+{
+  "data": {
+    "job_id": "uuid",
+    "asset_id": "uuid",
+    "status": "completed",
+    "image_url": "https://media.xroadstudio.com/...",
+    "thumbnail_url": null,
+    "error_message": null
+  }
+}
+```
+
+For branded images, call `GET /brand-kits` first and include the Brand Kit's `image_style`, `colors`, `audience`, and `offer` when drafting the image prompt. The image endpoint does not silently inject Brand Kit context.
 
 ---
 
@@ -487,9 +558,12 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `invalid_key` | 401 | Key missing, malformed, or revoked. |
 | `plan_required` | 403 | Account is not on a paid plan. |
 | `subscription_inactive` | 403 | Subscription expired or payment failed. |
+| `insufficient_credits` | 402 | Not enough credits to start image generation. |
 | `quota_monthly` | 429 | Monthly post limit reached. |
 | `quota_queue` | 429 | Too many posts queued waiting to publish. |
 | `rate_limited` | 429 | Over 60 requests/minute. Check `retry_after` in response + `Retry-After` header. |
+| `image_in_progress` | 409 | Wait for the current image to finish before starting another. |
+| `provider_failed` | 500 | Image provider failed to start or complete. |
 | `media_fetch_failed` | 422 | URL not reachable or over 20 MB. |
 | `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request - it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
@@ -503,6 +577,7 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 ## Limits
 
 - Rate limit: 60 requests / 60 seconds per key
+- Image generation: one active image at a time, 20 credits per image
 - Monthly post quota depends on the user's Xroad Studio plan and is shared with the dashboard
 - Media file upload: 250 MB max
 - Media URL re-host: 20 MB max

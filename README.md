@@ -2,7 +2,7 @@
 
 Last verified against the public Xroad Studio API: June 3, 2026
 
-This repository contains a portable AI-agent skill for publishing and scheduling social media posts through the [Xroad Studio](https://xroadstudio.com) API.
+This repository contains a portable AI-agent skill for generating images, publishing, and scheduling social media posts through the [Xroad Studio](https://xroadstudio.com) API.
 
 Use it when you want an AI assistant to act like a social media operations agent: check which accounts are connected, read sanitized Brand Kit context, draft on-brand captions, upload or re-host media, then publish or schedule posts through Xroad Studio.
 
@@ -10,6 +10,7 @@ Use it when you want an AI assistant to act like a social media operations agent
 
 - Lists connected social accounts before posting.
 - Reads sanitized Brand Kit context before drafting branded content.
+- Generates one AI image at a time, then polls until the permanent image URL is ready.
 - Drafts captions using brand voice, audience, offer, language, banned words, and image style guidance.
 - Uploads local media files or re-hosts temporary media URLs from tools such as ChatGPT/DALL-E, Canva, Gemini, Google Drive, or Airtable.
 - Verifies uploaded media is reachable before creating the post.
@@ -64,7 +65,8 @@ Never commit or paste a real API key into this repository. Store it in an enviro
 4. For branded content, the assistant fetches the requested Brand Kit first.
 5. The assistant lists connected social accounts and selects the right account IDs.
 6. If media is provided, the assistant uploads or re-hosts it, then verifies the CDN URL is live.
-7. The assistant creates a post through `POST /posts`, either immediate or scheduled.
+7. If the user needs a new AI image, the assistant starts `POST /images` and polls `GET /images/{job_id}` until `image_url` is ready.
+8. The assistant creates a post through `POST /posts`, either immediate or scheduled.
 
 The skill is intentionally written as plain Markdown so it can be reused across many AI systems without requiring a package install.
 
@@ -142,6 +144,10 @@ Post this image to my Instagram account. Use the attached image URL and write a 
 ```
 
 ```text
+Generate a clean product image, then post it to Instagram with a short caption.
+```
+
+```text
 Use my Brand Kit named Example Studio and schedule an on-brand LinkedIn post for tomorrow at 10:00 UTC.
 ```
 
@@ -172,6 +178,8 @@ Primary endpoints:
 - `GET /accounts`
 - `POST /accounts/connect`
 - `POST /media`
+- `POST /images`
+- `GET /images/{job_id}`
 - `POST /posts`
 - `GET /posts`
 - `GET /posts/{id}`
