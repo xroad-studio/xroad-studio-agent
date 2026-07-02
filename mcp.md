@@ -2,7 +2,7 @@
 
 Xroad Studio exposes a remote MCP (Model Context Protocol) server. Instead of teaching your agent to write curl commands from [agent-skills.md](./agent-skills.md), you connect your MCP client once and it gets 13 ready-made tools for posting, scheduling, media, AI images, Brand Kits, and analytics.
 
-Both options use the same API, the same key, and the same plan limits. Pick MCP when your tool supports it (Claude Code, Cursor, Windsurf, n8n). Pick the markdown skill for everything else (ChatGPT Projects, plain prompt contexts).
+Both options use the same API, the same key, and the same plan limits. Pick MCP when your tool supports it (Claude web chat, Claude Code, Claude Desktop, Cursor, Windsurf, Antigravity, n8n). Pick the markdown skill for everything else (ChatGPT Projects, plain prompt contexts).
 
 ## Connection
 
@@ -10,6 +10,14 @@ Both options use the same API, the same key, and the same plan limits. Pick MCP 
 URL:  https://xroadstudio.com/api/mcp
 Auth: Authorization: Bearer xrd_live_<your-key>
 ```
+
+Clients that cannot send a custom header (claude.ai custom connectors, some no-code tools) can pass the key in the URL instead:
+
+```text
+https://xroadstudio.com/api/mcp?key=xrd_live_<your-key>
+```
+
+Treat that full URL as a secret: it contains your key. Prefer the header form whenever your client supports it.
 
 Transport is Streamable HTTP. Generate your API key at [xroadstudio.com/settings](https://xroadstudio.com/settings) under API Keys, and store it in an environment variable such as `XROAD_API_KEY`. Never paste a real key into config files you commit or share.
 
@@ -76,6 +84,35 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
+### Claude Web and Claude Desktop (custom connector)
+
+In [claude.ai](https://claude.ai) or the Claude desktop app: Settings, then Connectors, then "Add custom connector". Custom connectors cannot send a custom header, so use the key-in-URL form:
+
+```text
+https://xroadstudio.com/api/mcp?key=xrd_live_<your-key>
+```
+
+Leave OAuth fields empty. Once added, enable the connector in a chat and ask Claude to list your Xroad accounts to verify. Anyone who sees this URL can post as you, so do not share screenshots of the connector settings, and rotate the key in Xroad Studio if it leaks.
+
+### Antigravity
+
+Open the MCP settings from the agent panel (Manage MCP servers) and add the server to the config JSON:
+
+```json
+{
+  "mcpServers": {
+    "xroad-studio": {
+      "serverUrl": "https://xroadstudio.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer xrd_live_<your-key>"
+      }
+    }
+  }
+}
+```
+
+If your Antigravity version does not support the `headers` field, use the key-in-URL form as `serverUrl` instead: `https://xroadstudio.com/api/mcp?key=xrd_live_<your-key>`.
+
 ### Claude Desktop and other stdio-only clients
 
 Clients that only speak stdio can bridge to the remote server with `mcp-remote`:
@@ -98,7 +135,7 @@ Clients that only speak stdio can bridge to the remote server with `mcp-remote`:
 }
 ```
 
-Note: claude.ai custom connectors require OAuth or no auth and cannot send a custom header. Use Claude Code, Claude Desktop with `mcp-remote`, or the markdown skill there instead.
+This bridge is only needed for clients without remote-server support. Claude Desktop itself can use the custom connector setup above instead.
 
 ### n8n
 
@@ -116,7 +153,7 @@ ChatGPT Custom GPTs work best through GPT Actions with the OpenAPI schema instea
 
 Ask your agent to run the `list_accounts` tool. A connected setup returns your social accounts. Common failures:
 
-- HTTP 401 before any tool runs: the Authorization header is missing or does not start with `xrd_live_`.
+- HTTP 401 before any tool runs: no key reached the server. The Authorization header (or `?key=` URL parameter) is missing or does not start with `xrd_live_`.
 - `invalid_key` inside a tool result: the key is wrong or revoked. Create a new one in Xroad Studio settings.
 - `plan_required` or `subscription_inactive`: API access needs an active paid plan.
 

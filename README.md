@@ -89,7 +89,7 @@ curl https://xroadstudio.com/api/v1/accounts \
 
 ## Install
 
-### MCP Server (Recommended For Claude Code, Cursor, Windsurf, n8n)
+### MCP Server (Recommended For Claude, Cursor, Windsurf, Antigravity, n8n)
 
 Xroad Studio also runs a remote MCP server at `https://xroadstudio.com/api/mcp`. If your tool supports MCP, connect it once and skip the manual context setup below. Setup instructions per client are in [mcp.md](./mcp.md).
 
