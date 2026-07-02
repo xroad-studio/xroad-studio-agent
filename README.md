@@ -9,24 +9,33 @@ Use it when you want an AI assistant to act like a social media operations agent
 ## Capabilities
 
 **Posting API**
-Publish, schedule, edit, and cancel posts across 10 platforms. Drafts confirm destination account, caption, media, and time before publishing when anything is ambiguous.
-→ [`POST /posts`](./agent-skills.md#create-a-post) · [`GET /posts`](./agent-skills.md#list-posts) · [`PATCH /posts/{id}`](./agent-skills.md#edit-a-scheduled-post) · [`DELETE /posts/{id}`](./agent-skills.md#cancel-a-scheduled-post)
+- Publish, schedule, edit, and cancel posts across 10 platforms.
+- Post immediately or schedule for later.
+- Confirms destination account, caption, media, and time before publishing when anything is ambiguous.
+- → [`POST /posts`](./agent-skills.md#create-a-post) · [`GET /posts`](./agent-skills.md#list-posts) · [`PATCH /posts/{id}`](./agent-skills.md#edit-a-scheduled-post) · [`DELETE /posts/{id}`](./agent-skills.md#cancel-a-scheduled-post)
 
 **Analytics API**
-Read normalized post performance per connected account — reach, views, engagement, likes, comments, shares — unified into the same shape across every platform. Creator and Business plans.
-→ [`GET /analytics/{accountId}`](./agent-skills.md#read-post-analytics)
+- Normalized post performance per connected account: reach, views, engagement, likes, comments, shares.
+- Same response shape across every platform — no per-platform metric mapping needed.
+- Creator and Business plans only.
+- → [`GET /analytics/{accountId}`](./agent-skills.md#read-post-analytics)
 
 **Image Creation API**
-Generate one AI image at a time from a text prompt, then poll until the permanent CDN URL is ready and post it directly.
-→ [`POST /images`](./agent-skills.md#generate-an-image) · [`GET /images/{job_id}`](./agent-skills.md#get-generated-image-status)
+- Generate one AI image at a time from a text prompt.
+- Poll until the permanent CDN URL is ready.
+- Post the generated image directly, no manual download/upload step.
+- → [`POST /images`](./agent-skills.md#generate-an-image) · [`GET /images/{job_id}`](./agent-skills.md#get-generated-image-status)
 
 **Brand Kit API**
-Read sanitized brand voice, colors, audience, offer, and banned-words context so drafts stay on-brand without manual copy-pasting.
-→ [`GET /brand-kits`](./agent-skills.md#list-brand-kits) · [`GET /brand-kits/{id}`](./agent-skills.md#get-one-brand-kit)
+- Read sanitized brand voice, colors, audience, offer, and banned-words context.
+- Keeps drafts on-brand without manual copy-pasting.
+- → [`GET /brand-kits`](./agent-skills.md#list-brand-kits) · [`GET /brand-kits/{id}`](./agent-skills.md#get-one-brand-kit)
 
 **Accounts & Media**
-List connected social accounts, generate OAuth connection URLs, and upload or re-host media — local files or expiring URLs from ChatGPT/DALL-E, Canva, Gemini, Google Drive, or Airtable — into a permanent, verified CDN URL.
-→ [`GET /accounts`](./agent-skills.md#list-connected-accounts) · [`POST /accounts/connect`](./agent-skills.md#generate-a-social-account-connection-url) · [`POST /media`](./agent-skills.md#upload-media)
+- List connected social accounts and generate OAuth connection URLs for new ones.
+- Upload local files or re-host expiring URLs (ChatGPT/DALL-E, Canva, Gemini, Google Drive, Airtable) into a permanent CDN URL.
+- Verifies the resulting URL is reachable before it's used in a post.
+- → [`GET /accounts`](./agent-skills.md#list-connected-accounts) · [`POST /accounts/connect`](./agent-skills.md#generate-a-social-account-connection-url) · [`POST /media`](./agent-skills.md#upload-media)
 
 The skill also guides the agent when an account, Brand Kit, API key, or OAuth connection is missing, instead of failing silently.
 
