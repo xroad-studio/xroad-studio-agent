@@ -16,6 +16,7 @@ Use it when you want an AI assistant to act like a social media operations agent
 - Verifies uploaded media is reachable before creating the post.
 - Publishes immediately or schedules posts for later.
 - Lists, retrieves, edits, and cancels scheduled posts.
+- Reads normalized post analytics per account (Creator and Business plans).
 - Guides the user when an account, Brand Kit, API key, or OAuth connection is missing.
 
 ## Secure By Design
@@ -183,6 +184,7 @@ Primary endpoints:
 - `GET /brand-kits/{id}`
 - `GET /accounts`
 - `POST /accounts/connect`
+- `GET /analytics/{accountId}`
 - `POST /media`
 - `POST /images`
 - `GET /images/{job_id}`

@@ -430,6 +430,47 @@ Response: `{ "data": { "id": "...", "status": "cancelled" } }`
 
 ---
 
+### Read post analytics
+
+```
+GET /analytics/{accountId}
+```
+
+Normalized performance metrics for one connected account. `accountId` is the `id` from `GET /accounts`. Creator and Business plans only (returns `analytics_plan_required` on other plans). Data refreshes daily; some platforms (Instagram especially) can take up to 48 hours to report full numbers.
+
+```bash
+curl "https://xroadstudio.com/api/v1/analytics/$ACCOUNT_ID?range=30d" \
+  -H "Authorization: Bearer $XROAD_API_KEY"
+```
+
+Query param `range`: `7d`, `30d` (default), or `90d`.
+
+Every platform is normalized into the same shape, so an agent does not need per-platform metric knowledge:
+
+```json
+{
+  "account": { "id": "acc_abc123", "platform": "instagram", "username": "myhandle", "status": "active" },
+  "range": "30d",
+  "summary": { "posts": 12, "reach": 0, "views": 0, "engagements": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0 },
+  "timeline": [ { "date": "2026-06-01", "reach": 0, "views": 0, "engagements": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0 } ],
+  "contentBreakdown": [ { "type": "video", "posts": 8, "reach": 0, "views": 0 } ],
+  "topPosts": [
+    {
+      "id": "uuid",
+      "caption_excerpt": "Launch day...",
+      "media_type": "video",
+      "platform_url": "https://...",
+      "posted_at": "2026-06-01T10:00:00Z",
+      "totals": { "reach": 0, "views": 0, "engagements": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0 }
+    }
+  ]
+}
+```
+
+This endpoint is read-only and returns normalized totals only. Raw per-platform metric fields are not exposed.
+
+---
+
 ## Common workflows
 
 ### Preflight checklist before creating a post
@@ -583,7 +624,8 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `media_fetch_failed` | 422 | URL not reachable or over 20 MB. |
 | `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request - it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
-| `not_found` | 404 | Post, image job, or brand kit not found or not owned by this key. |
+| `analytics_plan_required` | 403 | Analytics require a Creator or Business plan. |
+| `not_found` | 404 | Post, image job, brand kit, or social account not found or not owned by this key. |
 | `model_unavailable` | 500 | Image generation model is temporarily unavailable. Retry shortly. |
 | `db_error` | 500 | Unexpected database error. Retry shortly. |
 | `not_updatable` | 409 | Post is past `scheduled` status - cannot edit. |
