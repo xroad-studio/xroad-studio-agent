@@ -95,10 +95,16 @@ curl https://xroadstudio.com/api/v1/accounts \
 
 ### Claude Code
 
+Claude Code only auto-discovers skills laid out as `.claude/skills/<name>/SKILL.md` with YAML frontmatter. This file is plain Markdown without frontmatter, so download it into your project root and reference it from `CLAUDE.md` instead:
+
 ```bash
-mkdir -p .claude/skills
-  curl -o .claude/skills/agent-skills.md \
-  https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/agent-skills.md
+curl -O https://raw.githubusercontent.com/xroad-studio/xroad-studio-agent/main/agent-skills.md
+```
+
+Then add this line to your project's `CLAUDE.md` so Claude Code loads it as context:
+
+```text
+@agent-skills.md
 ```
 
 ### Cursor Or Windsurf
@@ -201,17 +207,6 @@ Full API reference:
 - Post status lifecycle: `scheduled`, `processing`, `published`, `failed`, `cancelled`.
 - Published posts cannot be cancelled through this API.
 - Media should be verified with an HTTP `200` check before creating the post.
-
-## Portfolio Notes
-
-This project demonstrates:
-
-- Agent instruction design for real API workflows.
-- Secure Bearer-token authentication guidance.
-- Sanitized Brand Kit context designed for external AI agents.
-- Social posting workflow orchestration across accounts, Brand Kits, media upload, scheduling, and post management.
-- Defensive agent behavior around missing accounts, missing Brand Kits, temporary media URLs, API errors, and rate limits.
-- Portable documentation that works across multiple AI tools instead of being locked to one runtime.
 
 ## Security
 

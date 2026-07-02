@@ -126,8 +126,22 @@ Response:
 ```json
 {
   "data": [
-    { "id": "acc_abc123", "platform": "instagram", "username": "myhandle" },
-    { "id": "acc_xyz789", "platform": "tiktok",    "username": "myhandle" }
+    {
+      "id": "acc_abc123",
+      "platform": "instagram",
+      "username": "myhandle",
+      "profile_photo_url": "https://...",
+      "status": "active",
+      "created_at": "2026-05-15T09:00:00Z"
+    },
+    {
+      "id": "acc_xyz789",
+      "platform": "tiktok",
+      "username": "myhandle",
+      "profile_photo_url": "https://...",
+      "status": "active",
+      "created_at": "2026-05-15T09:00:00Z"
+    }
   ]
 }
 ```
@@ -250,6 +264,8 @@ Response:
   }
 }
 ```
+
+> **Note:** If an identical prompt is submitted again within the dedup window, the response omits `asset_id`. Rely on `job_id` and poll `GET /images/{job_id}` for the result.
 
 ### Get generated image status
 
@@ -567,6 +583,9 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `media_fetch_failed` | 422 | URL not reachable or over 20 MB. |
 | `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request - it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
+| `not_found` | 404 | Post, image job, or brand kit not found or not owned by this key. |
+| `model_unavailable` | 500 | Image generation model is temporarily unavailable. Retry shortly. |
+| `db_error` | 500 | Unexpected database error. Retry shortly. |
 | `not_updatable` | 409 | Post is past `scheduled` status - cannot edit. |
 | `not_cancellable` | 409 | Post already published. |
 | `duplicate` | 409 | Identical post submitted within 30 seconds. |
