@@ -6,30 +6,29 @@ This repository contains a portable AI-agent skill for generating images, publis
 
 Use it when you want an AI assistant to act like a social media operations agent: check which accounts are connected, read sanitized Brand Kit context, draft on-brand captions, upload or re-host media, then publish or schedule posts through Xroad Studio.
 
-## What The Skill Does
+## Capabilities
 
-- Lists connected social accounts before posting.
-- Reads sanitized Brand Kit context before drafting branded content.
-- Generates one AI image at a time, then polls until the permanent image URL is ready.
-- Drafts captions using brand voice, audience, offer, language, banned words, and image style guidance.
-- Uploads local media files or re-hosts temporary media URLs from tools such as ChatGPT/DALL-E, Canva, Gemini, Google Drive, or Airtable.
-- Verifies uploaded media is reachable before creating the post.
-- Publishes immediately or schedules posts for later.
-- Lists, retrieves, edits, and cancels scheduled posts.
-- Reads normalized post analytics per account (Creator and Business plans).
-- Guides the user when an account, Brand Kit, API key, or OAuth connection is missing.
+**Posting API**
+Publish, schedule, edit, and cancel posts across 10 platforms. Drafts confirm destination account, caption, media, and time before publishing when anything is ambiguous.
+→ [`POST /posts`](./agent-skills.md#create-a-post) · [`GET /posts`](./agent-skills.md#list-posts) · [`PATCH /posts/{id}`](./agent-skills.md#edit-a-scheduled-post) · [`DELETE /posts/{id}`](./agent-skills.md#cancel-a-scheduled-post)
 
-## Secure By Design
+**Analytics API**
+Read normalized post performance per connected account — reach, views, engagement, likes, comments, shares — unified into the same shape across every platform. Creator and Business plans.
+→ [`GET /analytics/{accountId}`](./agent-skills.md#read-post-analytics)
 
-The skill is designed for public agent use without exposing sensitive Xroad Studio internals.
+**Image Creation API**
+Generate one AI image at a time from a text prompt, then poll until the permanent CDN URL is ready and post it directly.
+→ [`POST /images`](./agent-skills.md#generate-an-image) · [`GET /images/{job_id}`](./agent-skills.md#get-generated-image-status)
 
-- Uses the public Xroad Studio API only.
-- Requires Bearer-token authentication on every request.
-- Instructs agents to store API keys in environment variables or secret managers.
-- Reads only sanitized Brand Kit fields intended for external agents.
-- Does not expose internal database fields, user IDs, storage keys, provider credentials, OAuth tokens, or private implementation details.
-- Keeps third-party provider plumbing behind the Xroad Studio API instead of documenting internal posting infrastructure.
-- Requires the agent to confirm ambiguous posting destinations before publishing, editing, or cancelling posts.
+**Brand Kit API**
+Read sanitized brand voice, colors, audience, offer, and banned-words context so drafts stay on-brand without manual copy-pasting.
+→ [`GET /brand-kits`](./agent-skills.md#list-brand-kits) · [`GET /brand-kits/{id}`](./agent-skills.md#get-one-brand-kit)
+
+**Accounts & Media**
+List connected social accounts, generate OAuth connection URLs, and upload or re-host media — local files or expiring URLs from ChatGPT/DALL-E, Canva, Gemini, Google Drive, or Airtable — into a permanent, verified CDN URL.
+→ [`GET /accounts`](./agent-skills.md#list-connected-accounts) · [`POST /accounts/connect`](./agent-skills.md#generate-a-social-account-connection-url) · [`POST /media`](./agent-skills.md#upload-media)
+
+The skill also guides the agent when an account, Brand Kit, API key, or OAuth connection is missing, instead of failing silently.
 
 ## Supported Platforms
 
@@ -57,19 +56,6 @@ The exact posting behavior depends on the connected social account and the platf
 - An AI tool that can read instruction/context files, such as Claude Code, Cursor, Windsurf, ChatGPT Projects, Custom GPT Actions, Copilot, n8n AI nodes, or another agent runtime.
 
 Never commit or paste a real API key into this repository. Store it in an environment variable such as `XROAD_API_KEY`.
-
-## How It Works
-
-1. The user asks the AI assistant to create, schedule, edit, or cancel social content.
-2. The assistant loads this skill as instruction context.
-3. The assistant checks the user's Xroad Studio API key and calls the Xroad API.
-4. For branded content, the assistant fetches the requested Brand Kit first.
-5. The assistant lists connected social accounts and selects the right account IDs.
-6. If media is provided, the assistant uploads or re-hosts it, then verifies the CDN URL is live.
-7. If the user needs a new AI image, the assistant starts `POST /images` and polls `GET /images/{job_id}` until `image_url` is ready.
-8. The assistant creates a post through `POST /posts`, either immediate or scheduled.
-
-The skill is intentionally written as plain Markdown so it can be reused across many AI systems without requiring a package install.
 
 ## Setup In Xroad Studio
 
@@ -144,6 +130,19 @@ Use an HTTP Request node with:
 - Header value: `Bearer {{$credentials.xroadApiKey}}`
 - Base URL: `https://xroadstudio.com/api/v1`
 
+## How It Works
+
+1. The user asks the AI assistant to create, schedule, edit, or cancel social content.
+2. The assistant loads this skill as instruction context.
+3. The assistant checks the user's Xroad Studio API key and calls the Xroad API.
+4. For branded content, the assistant fetches the requested Brand Kit first.
+5. The assistant lists connected social accounts and selects the right account IDs.
+6. If media is provided, the assistant uploads or re-hosts it, then verifies the CDN URL is live.
+7. If the user needs a new AI image, the assistant starts `POST /images` and polls `GET /images/{job_id}` until `image_url` is ready.
+8. The assistant creates a post through `POST /posts`, either immediate or scheduled.
+
+The skill is intentionally written as plain Markdown so it can be reused across many AI systems without requiring a package install.
+
 ## Example Prompts
 
 ```text
@@ -198,6 +197,18 @@ Full API reference:
 
 - [API docs](https://xroadstudio.com/docs/api)
 - [OpenAPI schema](https://xroadstudio.com/openapi.json)
+
+## Secure By Design
+
+The skill is designed for public agent use without exposing sensitive Xroad Studio internals.
+
+- Uses the public Xroad Studio API only.
+- Requires Bearer-token authentication on every request.
+- Instructs agents to store API keys in environment variables or secret managers.
+- Reads only sanitized Brand Kit fields intended for external agents.
+- Does not expose internal database fields, user IDs, storage keys, provider credentials, OAuth tokens, or private implementation details.
+- Keeps third-party provider plumbing behind the Xroad Studio API instead of documenting internal posting infrastructure.
+- Requires the agent to confirm ambiguous posting destinations before publishing, editing, or cancelling posts.
 
 ## Limits And Operational Notes
 
