@@ -625,6 +625,10 @@ All errors return `{ "error": { "code": "...", "message": "..." } }`.
 | `media_processing_failed` | 422 | Media uploaded successfully but could not be processed by the provider. Retry the request - it resolves automatically in most cases. |
 | `asset_not_found` | 404 | `asset_id` not found in your library. |
 | `analytics_plan_required` | 403 | Analytics require a Creator or Business plan. |
+| `scheduled_in_past` | 400 | `scheduled_at` is less than 30 seconds in the future. |
+| `scheduled_too_far` | 400 | `scheduled_at` is more than 3 months in the future. |
+| `account_not_owned` | 400 | One or more `social_account_ids` are not connected to your account. |
+| `db_insert_failed` | 500 | Unexpected error saving the post. Retry shortly. |
 | `not_found` | 404 | Post, image job, brand kit, or social account not found or not owned by this key. |
 | `model_unavailable` | 500 | Image generation model is temporarily unavailable. Retry shortly. |
 | `db_error` | 500 | Unexpected database error. Retry shortly. |
