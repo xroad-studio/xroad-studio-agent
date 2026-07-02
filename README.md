@@ -89,6 +89,15 @@ curl https://xroadstudio.com/api/v1/accounts \
 
 ## Install
 
+### MCP Server (Recommended For Claude Code, Cursor, Windsurf, n8n)
+
+Xroad Studio also runs a remote MCP server at `https://xroadstudio.com/api/mcp`. If your tool supports MCP, connect it once and skip the manual context setup below. Setup instructions per client are in [mcp.md](./mcp.md).
+
+```bash
+claude mcp add --transport http xroad-studio https://xroadstudio.com/api/mcp \
+  --header "Authorization: Bearer $XROAD_API_KEY"
+```
+
 ### Claude Code
 
 Claude Code only auto-discovers skills laid out as `.claude/skills/<name>/SKILL.md` with YAML frontmatter. This file is plain Markdown without frontmatter, so download it into your project root and reference it from `CLAUDE.md` instead:
