@@ -161,6 +161,18 @@ Use an HTTP Request node with:
 
 The skill is intentionally written as plain Markdown so it can be reused across many AI systems without requiring a package install.
 
+## Optional X/Twitter Source Context
+
+When a campaign needs X/Twitter research before a post is drafted, agents can
+use TweetClaw from Xquik as a separate reviewed source step before calling the
+Xroad Studio API. Good inputs are public search tweets, reply examples, creator
+profile notes, follower-export summaries, media references, source URLs, and
+`checkedAt` timestamps.
+
+Keep those findings in the user brief or Brand Kit notes. Xroad Studio still
+owns connected accounts, media hosting, post creation, scheduling, edits,
+cancellations, and analytics.
+
 ## Example Prompts
 
 ```text

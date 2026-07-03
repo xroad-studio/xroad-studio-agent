@@ -18,6 +18,13 @@ Before creating or changing a post, make sure you know:
 
 If any of those details are ambiguous, ask a concise clarification before posting. Treat publishing as a user-visible action and avoid posting to a guessed account.
 
+Optional source context: when the user wants X/Twitter research before drafting
+or scheduling, they can provide reviewed TweetClaw findings from Xquik. Treat
+public search tweets, reply examples, creator profile notes, follower-export
+summaries, media references, source URLs, and `checkedAt` timestamps as brief
+context only. Do not use them to infer a posting account or bypass the normal
+Xroad Studio account, media, schedule, and publish confirmation flow.
+
 **What you can do with this skill:**
 - Generate one AI image at a time with Xroad Studio, then poll until the image URL is ready
 - List your connected social accounts
